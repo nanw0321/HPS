@@ -10,9 +10,6 @@ from array import array
 
 import numpy as np
 
-#drawing option
-gStyle.SetOptFit(1)
-
 #read path for subdirectories
 pth_recon = []
 pth_truth = []
@@ -33,8 +30,7 @@ for pathname in os.listdir(path_truth):
 pth = list(set(pth_recon).intersection(pth_truth)); pth.sort();
 
 for numf in range(len(pth)):
-	element = pth[numf]
-	print "folder:" + str(numf)
+    element = pth[numf]
 
 	#read file names for looping through root files
 	fn_recon = []
@@ -42,13 +38,9 @@ for numf in range(len(pth)):
 
 	for filename in os.listdir(path_recon+str(element)):
 		if filename.endswith(".root"):
-			if filename.endswith("MeV.root"):
-				continue
-			else:
-				fn_recon.append(filename)
+			fn_recon.append(filename)
 		else:
 			continue
-
 
 	#create branch addresses for reading data off of root files
 	triPosP, triEle1P, triM, triEndZ, posP, eleP, uncM, uncVZ = (array('d',[0]),) * 8
@@ -59,34 +51,31 @@ for numf in range(len(pth)):
 	Hpe = [None] * len(fn_recon);
 	Hm = [None] * len(fn_recon);
 	Hvz = [None] * len(fn_recon);
-	
+
+	#drawing option
+	gStyle.SetOptFit(1)
+
+	#create TH1F in list
 	for i in range(len(fn_recon)):
-		Hpp[i] = ROOT.TH1F("posP_"+str(i),"posP_"+str(i),120,-0.6,0.6)
-		Hpe[i] = ROOT.TH1F("eleP_"+str(i),"eleP_"+str(i),120,-0.4,0.8)
-		Hm[i] = ROOT.TH1F("M_"+str(i),"M_"+str(i),120,-0.03,0.03)
-		Hvz[i] = ROOT.TH1F("VZ_"+str(i),"VZ_"+str(i),200,-100,100)
-		print "A", Hpp[i]
+		Hpp[i] = ROOT.TH1F("posP_"+str(numf)+"_"+str(i),"posP_"+str(i),120,-0.6,0.6)
+		Hpe[i] = ROOT.TH1F("eleP_"+str(numf)+"_"+str(i),"eleP_"+str(i),120,-0.4,0.8)
+		Hm[i] = ROOT.TH1F("M_"+str(numf)+"_"+str(i),"M_"+str(i),120,-0.03,0.03)
+		Hvz[i] = ROOT.TH1F("VZ_"+str(numf)+"_"+str(i),"VZ_"+str(i),200,-100,100)
 
 	#generate plots and save to list
 	for i in range(len(fn_recon)):
-		print "B", Hpp[i]
-		print "    file: "+ str(i)
+		print "truth file number: "+ str(i)
 		f1 = TFile(path_recon+element+'/'+fn_recon[i])
-		print "C", Hpp[i]
 		events = f1.Get("ntuple")
-		print "D", Hpp[i]
-		events.Branch("triPosP",triPosP,"triPosP/D")
+		events.Branch("triPosP",triPosP,"triEle1P/D")
 		events.Branch("triM",triM,"triM/D")
 		events.Branch("triEndZ",triEndZ,"triEndZ/D")
 		events.Branch("posP",posP,"posP/D")
 		events.Branch("eleP",eleP,"eleP/D")
 		events.Branch("uncM",uncM,"uncM/D")
 		events.Branch("uncVZ",uncVZ,"uncVZ")
-		print "E", Hpp[i]
-		nentries = events.GetEntries()
-		print "F", Hpp[i]
-		
-		for ii in range(nentries):
+		nentries1 = events.GetEntries()
+		for ii in range(nentries1):
 			events.GetEntry(ii)
 			Hpp[i].Fill((events.posP)-(events.triPosP))
 			Hpe[i].Fill((events.eleP)-(events.triEle1P))
@@ -94,8 +83,8 @@ for numf in range(len(pth)):
 			Hvz[i].Fill((events.uncVZ)-(events.triEndZ))
 
 	#configure saved plots
+	print "Configure plots"
 	for i in range(len(fn_recon)):
-		print "    file " + str(i)
 		runname = fn_recon[i].replace(".root","")
 		Hpp[i].SetTitle(runname+'_posP');
 		Hpe[i].SetTitle(runname+'_eleP');
@@ -115,6 +104,7 @@ for numf in range(len(pth)):
 	c4 = TCanvas("c4","VZ_diff",800,600)
 
 	#plot on canvas
+	print "Draw on canvas"
 	c1.Print(str(element)+'_posP.pdf[')
 	c2.Print(str(element)+'_eleP.pdf[')
 	c3.Print(str(element)+'_M.pdf[')
@@ -135,5 +125,3 @@ for numf in range(len(pth)):
 	c3.Print(str(element)+'_M.pdf]'); c3.Close();
 	c4.Print(str(element)+'_VZ.pdf]'); c4.Close();
 
-	f1 = 0;
-	events = 0;
