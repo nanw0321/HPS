@@ -1,0 +1,14 @@
+Naming convension:
+
+[electron_energy(MeV)]_[variable]
+
+## reconstructed - recon_truth histograms:
+ # [eleP]: triEle1P - eleP
+ # [posP]: triPosP - posP
+ # [M]: triM - uncM
+ # [VZ]: triEndZ - uncVZ
+
+## reconstructed truth Vz (truth Vz after cuts/recoil/trigger/etc.)
+  ----- divided by -----
+   truth Vz all
+ # [VZ_efficiency]: recon_triEndZ / truth_triEndZ
