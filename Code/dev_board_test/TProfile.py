@@ -43,12 +43,12 @@ hsig2 = [None] * len(fn); hsig3 = [None] * len(fn);
 hsig4 = [None] * len(fn); hsig5 = [None] * len(fn);
 
 for i in range(len(fn)):
-	hsig0[i] = ROOT.TH1F("hsig0"+str(i),"hsig0"+str(i),200,0,200)
-	hsig1[i] = ROOT.TH1F("hsig1"+str(i),"hsig1"+str(i),200,0,200)
-	hsig2[i] = ROOT.TH1F("hsig2"+str(i),"hsig2"+str(i),200,0,200)
-	hsig3[i] = ROOT.TH1F("hsig3"+str(i),"hsig3"+str(i),200,0,200)
-	hsig4[i] = ROOT.TH1F("hsig4"+str(i),"hsig4"+str(i),200,0,200)
-	hsig5[i] = ROOT.TH1F("hsig5"+str(i),"hsig5"+str(i),200,0,200)
+	hsig0[i] = ROOT.TH1F("hsig0_"+str(i),"hsig0_"+str(i),200,0,200)
+	hsig1[i] = ROOT.TH1F("hsig1_"+str(i),"hsig1_"+str(i),200,0,200)
+	hsig2[i] = ROOT.TH1F("hsig2_"+str(i),"hsig2_"+str(i),200,0,200)
+	hsig3[i] = ROOT.TH1F("hsig3_"+str(i),"hsig3_"+str(i),200,0,200)
+	hsig4[i] = ROOT.TH1F("hsig4_"+str(i),"hsig4_"+str(i),200,0,200)
+	hsig5[i] = ROOT.TH1F("hsig5_"+str(i),"hsig5_"+str(i),200,0,200)
 
 #create list of mean and sigma plots
 mgr0 = [None] * len(fn); mgr1 = [None] * len(fn);
@@ -115,7 +115,10 @@ for i in range(len(fn)):
 	mgr5[i] = TGraph(640,binX,mean5)
 
 #generate sigma histograms and save to list, calculate normalization constant
-cons0 = []; cons1 = []; cons2 = []; cons3 = []; cons4 = []; cons6 = [];
+cons0 = np.zeros(len(fn)); cons1 = np.zeros(len(fn));
+cons2 = np.zeros(len(fn)); cons3 = np.zeros(len(fn));
+cons4 = np.zeros(len(fn)); cons5 = np.zeros(len(fn));
+
 
 for i in range(len(fn)):
 	for nbin in range(640):
@@ -125,13 +128,12 @@ for i in range(len(fn)):
 		hsig3[i].Fill(prof3[i].GetBinError(nbin))
 		hsig4[i].Fill(prof4[i].GetBinError(nbin))
 		hsig5[i].Fill(prof5[i].GetBinError(nbin))
-
-	hsig0[i].Fit("gaus"); cons0.append(hsig0[i].GetFunction("gaus").GetParameter(1))
-	hsig1[i].Fit("gaus"); cons1.append(hsig1[i].GetFunction("gaus").GetParameter(1))
-	hsig2[i].Fit("gaus"); cons2.append(hsig2[i].GetFunction("gaus").GetParameter(1))
-	hsig3[i].Fit("gaus"); cons3.append(hsig3[i].GetFunction("gaus").GetParameter(1))
-	hsig4[i].Fit("gaus"); cons4.append(hsig4[i].GetFunction("gaus").GetParameter(1))
-	hsig5[i].Fit("gaus"); cons5.append(hsig5[i].GetFunction("gaus").GetParameter(1))
+	hsig0[i].Fit("gaus","Q","",hsig0[i].GetMean()*0.7,hsig0[i].GetMean()*1.3); cons0[i] = hsig0[i].GetFunction("gaus").GetParameter(1);
+	hsig1[i].Fit("gaus","Q","",hsig1[i].GetMean()*0.7,hsig1[i].GetMean()*1.3); cons1[i] = hsig1[i].GetFunction("gaus").GetParameter(1);
+	hsig2[i].Fit("gaus","Q","",hsig2[i].GetMean()*0.7,hsig2[i].GetMean()*1.3); cons2[i] = hsig2[i].GetFunction("gaus").GetParameter(1);
+	hsig3[i].Fit("gaus","Q","",hsig3[i].GetMean()*0.7,hsig3[i].GetMean()*1.3); cons3[i] = hsig3[i].GetFunction("gaus").GetParameter(1);
+	hsig4[i].Fit("gaus","Q","",hsig4[i].GetMean()*0.7,hsig4[i].GetMean()*1.3); cons4[i] = hsig4[i].GetFunction("gaus").GetParameter(1);
+	hsig5[i].Fit("gaus","Q","",hsig5[i].GetMean()*0.7,hsig5[i].GetMean()*1.3); cons5[i] = hsig5[i].GetFunction("gaus").GetParameter(1);
 
 #generate sigma plots and save to list
 for i in range(len(fn)):
@@ -142,7 +144,6 @@ for i in range(len(fn)):
 		sig3[nbin] = (prof3[i].GetBinError(nbin))/cons3[i]
 		sig4[nbin] = (prof4[i].GetBinError(nbin))/cons4[i]
 		sig5[nbin] = (prof5[i].GetBinError(nbin))/cons5[i]
-
 	egr0[i] = TGraph(640,binX,sig0)
 	egr1[i] = TGraph(640,binX,sig1)
 	egr2[i] = TGraph(640,binX,sig2)
@@ -159,45 +160,38 @@ for i in range(len(fn)):
 	mgr3[i].SetMinimum(3500); mgr3[i].SetMaximum(7000);
 	mgr4[i].SetMinimum(3500); mgr4[i].SetMaximum(7000);
 	mgr5[i].SetMinimum(3500); mgr5[i].SetMaximum(7000);
-
 	mgr0[i].SetTitle(runname+'_sample0'); mgr0[i].SetLineColor(i+1);
 	mgr1[i].SetTitle(runname+'_sample1'); mgr1[i].SetLineColor(i+1);
 	mgr2[i].SetTitle(runname+'_sample2'); mgr2[i].SetLineColor(i+1);
 	mgr3[i].SetTitle(runname+'_sample3'); mgr3[i].SetLineColor(i+1);
 	mgr4[i].SetTitle(runname+'_sample4'); mgr4[i].SetLineColor(i+1);
 	mgr5[i].SetTitle(runname+'_sample5'); mgr5[i].SetLineColor(i+1);
-
 	egr0[i].SetLineColor(i+1);
 	egr1[i].SetLineColor(i+1);
 	egr2[i].SetLineColor(i+1);
 	egr3[i].SetLineColor(i+1);
 	egr4[i].SetLineColor(i+1);
 	egr5[i].SetLineColor(i+1);
-
-'''
-#enable if not normalizing
-egr0[i].SetMaximum(200);
-egr1[i].SetMaximum(200);
-egr2[i].SetMaximum(200);
-egr3[i].SetMaximum(200);
-egr4[i].SetMaximum(200);
-egr5[i].SetMaximum(200);
-'''
+	egr0[i].SetMaximum(2);
+	egr1[i].SetMaximum(2);
+	egr2[i].SetMaximum(2);
+	egr3[i].SetMaximum(2);
+	egr4[i].SetMaximum(2);
+	egr5[i].SetMaximum(2);
 
 #create legend
 legend1 = [None] * 6
 legend2 = [None] * 6
-
 legend3 = [None] * 6
 legend4 = [None] * 6
 
 
 for i in range(6):
 	legend1[i] = ROOT.TLegend(0.48,0.1,0.9,0.4)
-	legend2[i] = ROOT.TLegend(0.6,0.6,0.9,0.9)
+	legend2[i] = ROOT.TLegend(0.6,0.7,0.9,0.9)
 	legend3[i] = ROOT.TLegend(0.48,0.1,0.9,0.4)
-	legend4[i] = ROOT.TLegend(0.6,0.6,0.9,0.9)
-	
+	legend4[i] = ROOT.TLegend(0.6,0.7,0.9,0.9)
+
 for i in [0,1,2]:
 	legend1[0].AddEntry(mgr0[i],fn[i][9:-11],"l")
 	legend1[1].AddEntry(mgr1[i],fn[i][9:-11],"l")
@@ -391,3 +385,34 @@ c4e.Print('Profile_Histogram_sample3_error.pdf]')
 c5e.Print('Profile_Histogram_sample4_error.pdf]')
 c6e.Print('Profile_Histogram_sample5_error.pdf]')
 
+
+'''
+c1.Clear()
+c2.Clear()
+c3.Clear()
+c4.Clear()
+c5.Clear()
+c6.Clear()
+
+c1e.Clear()
+c2e.Clear()
+c3e.Clear()
+c4e.Clear()
+c5e.Clear()
+c6e.Clear()
+
+c1.Close()
+c2.Close()
+c3.Close()
+c4.Close()
+c5.Close()
+c6.Close()
+
+c1e.Close()
+c2e.Close()
+c3e.Close()
+c4e.Close()
+c5e.Close()
+c6e.Close()
+
+'''
