@@ -32,8 +32,13 @@ for pathname in os.listdir(path_truth):
 #loop through directories contained in both truth and recon
 pth = list(set(pth_recon).intersection(pth_truth)); pth.sort();
 
+#create list of plots
+rat1 = [None] * len(pth)
+rat2 = [None] * len(pth)
+rat3 = [None] * len(pth)
+
 for numf in range(len(pth)):
-	if 1 < numf <4 or numf > 9:
+	if 0 < numf <4 or numf > 9:
 		continue
 
 	element = pth[numf]; print "recon folder: ", numf
@@ -73,11 +78,11 @@ for numf in range(len(pth)):
 	sigp = []; sige = []; sigm = []; sigvz = [];
 
 	for i in range(len(fn_recon)):
-		Hpp[i] = ROOT.TH1F("posP_"+str(i),"posP_"+str(i),120,-0.6,0.6)
-		Hpe[i] = ROOT.TH1F("eleP_"+str(i),"eleP_"+str(i),120,-0.4,0.8)
-		Hm[i] = ROOT.TH1F("M_"+str(i),"M_"+str(i),120,-0.03,0.03)
-		Hvzdiff[i] = ROOT.TH1F("VZd_"+str(i),"VZd_"+str(i),200,-100,100)
-		Hvz1[i] = ROOT.TH1F("VZ1_"+str(i),"VZ1_"+str(i),80,0,400)
+		Hpp[i] = ROOT.TH1F("posP_"+str(i),"posP_"+str(i),120,-0.6,0.6); Hpp[i].Sumw2();
+		Hpe[i] = ROOT.TH1F("eleP_"+str(i),"eleP_"+str(i),120,-0.4,0.8); Hpe[i].Sumw2();
+		Hm[i] = ROOT.TH1F("M_"+str(i),"M_"+str(i),120,-0.03,0.03); Hm[i].Sumw2();
+		Hvzdiff[i] = ROOT.TH1F("VZd_"+str(i),"VZd_"+str(i),200,-100,100); Hvzdiff[i].Sumw2();
+		Hvz1[i] = ROOT.TH1F("VZ1_"+str(i),"VZ1_"+str(i),36,0,180); Hvz1[i].Sumw2();
 
 	#recon plots
 	for i in range(len(fn_recon)):
@@ -103,7 +108,7 @@ for numf in range(len(pth)):
 		f1 = 0; events1 = 0
 
 	#truth plots
-	Htvz = [None]; Htvz = ROOT.TH1F("tVZ_"+str(i),"tVZ_"+str(i),80,0,400);
+	Htvz = [None]; Htvz = ROOT.TH1F("tVZ_"+str(i),"tVZ_"+str(i),36,0,180);
 	f2 = TFile(path_truth+element+'/ap-WBT_'+element+'MeV_truth.root')
 	events2 = f2.Get("ntuple")
 	events2.Branch("triEndZ",truEndZ,"triEndZ/D")
@@ -149,7 +154,7 @@ for numf in range(len(pth)):
 	c4.Print(str(element)+'_VZ.pdf]'); c4.Close();
 
 	for i in range(len(fn_recon)):
-		Hvz2[i] = ROOT.TH1F("VZ2_"+str(i),"VZ2_"+str(i),80,0,400)
+		Hvz2[i] = ROOT.TH1F("VZ2_"+str(i),"VZ2_"+str(i),36,0,180); Hvz2[i].Sumw2();
 	#3-sigma cut
 	for i in range(len(fn_recon)):
 		nentries3 = Hpp[i].GetEntries()
@@ -189,10 +194,11 @@ for numf in range(len(pth)):
 			(lbm <= difm <= ubm) and (lbvz <= difvz <= ubvz):
 				Hvz2[i].Fill(events3.triEndZ)
 		f3 = 0; events3 = 0;
-
+	
 	#take the ratio and configure plots
 	for i in range(len(fn_recon)):
-		Hrat[i] = Hvz1[i]; Hcut[i] = Hvz2[i];
+		Hrat[i] = Hvz1[i]; Hrat[i].Sumw2();
+		Hcut[i] = Hvz2[i]; Hcut[i].Sumw2();
 		Hrat[i].Divide(Htvz); Hcut[i].Divide(Htvz);
 		runname = fn_recon[i].replace(".root","")
 		Hrat[i].SetTitle(runname+'_efficiency')
@@ -211,7 +217,64 @@ for numf in range(len(pth)):
 		Hrat[i].Draw()
 		Hcut[i].Draw("SAME")
 		c5.Print(str(element)+'_VZ_efficiency.pdf'); c5.Clear();
-
 	c5.Print(str(element)+'_VZ_efficiency.pdf]'); c5.Close();
 
+	rat1[numf] = Hcut[0]; rat1[numf].Divide(Hrat[0]); rat1[numf].SetTitle(str(element)+'MeV_L1L1'); rat1[numf].SetLineColor(numf+40);
+	rat2[numf] = Hcut[1]; rat2[numf].Divide(Hrat[1]); rat2[numf].SetTitle(str(element)+'MeV_L1L2'); rat2[numf].SetLineColor(numf+40);
+	rat3[numf] = Hcut[2]; rat3[numf].Divide(Hrat[2]); rat3[numf].SetTitle(str(element)+'MeV_L2L2'); rat3[numf].SetLineColor(numf+40);
 
+	rat1[numf].SetMaximum(3)
+	rat2[numf].SetMaximum(3)
+	rat3[numf].SetMaximum(3)
+
+
+#create canvas for total ratio plot
+c11 = TCanvas("c11","L1L1",800,600)
+c12 = TCanvas("c12","L1L2",800,600)
+c22 = TCanvas("c22","L2L2",800,600)
+
+for numf in range(len(pth)):
+	if 0 < numf <4 or numf > 9:
+		continue
+	if numf == 0:
+		c11.cd(); rat1[numf].Draw("E1"); rat1[numf].Draw("SAME Lhist")
+		c12.cd(); rat2[numf].Draw("E1"); rat2[numf].Draw("SAME Lhist")
+		c22.cd(); rat3[numf].Draw("E1"); rat3[numf].Draw("SAME Lhist")
+	else:
+		c11.cd(); rat1[numf].Draw("SAME E1"); rat1[numf].Draw("SAME Lhist")
+		c12.cd(); rat2[numf].Draw("SAME E1"); rat2[numf].Draw("SAME Lhist")
+		c22.cd(); rat3[numf].Draw("SAME E1"); rat3[numf].Draw("SAME Lhist")
+
+#create legend
+legend1 = [None]; legend1 = ROOT.TLegend(0.7,0,6,0.9,0.9)
+legend2 = [None]; legend2 = ROOT.TLegend(0.7,0,6,0.9,0.9)
+legend3 = [None]; legend3 = ROOT.TLegend(0.7,0,6,0.9,0.9)
+
+for numf in range(len(pth)):
+	if 0 < numf < 4 or numf > 9:
+		continue
+	element = pth[numf]
+	legend1.AddEntry(rat1[numf],str(element)+'MeV',"lep")
+	legend2.AddEntry(rat2[numf],str(element)+'MeV',"lep")
+	legend3.AddEntry(rat3[numf],str(element)+'MeV',"lep")
+
+c11.cd(); legend1.Draw();
+c12.cd(); legend2.Draw();
+c22.cd(); legend3.Draw();
+
+c11.Print("L1L1.pdf")
+c12.Print("L1L2.pdf")
+c22.Print("L2L2.pdf")
+
+'''
+	#TGraphAsymmErrors
+	for i in range(len(fn_recon)):
+		Hrat[i] = ROOT.TGraphAsymmErrors(Hvz1,Htvz)
+		Hcut[i] = ROOT.TGraphAsymmErrors(Hvz2,Htvz)
+		runname = fn_recon[i].replace(".root","")
+		Hrat[i].SetTitle(runname+'_efficiency')
+		Hcut[i].SetTitle(runname+'_efficiency')
+		Hrat[i].SetLineColor(1)
+		Hcut[i].SetLineColor(2)
+
+'''
